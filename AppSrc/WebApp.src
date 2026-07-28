@@ -1,0 +1,182 @@
+// WebApp.src
+// MistralDataflexTest -- DataFlex 26.0 Web/Mobile application.
+//
+// Drill-down navigation pattern (cWebViewStack + cWebMenuButton).
+
+Use AllWebUIServerClasses.pkg
+Use cApplication.pkg
+Use cConnection.pkg
+Use cWebApp.pkg
+Use cWebMenuItem.pkg
+Use cWebPanel.pkg
+Use cWebMenuButton.pkg
+Use cWebButton.pkg
+Use cWebBreadcrumb.pkg
+Use cWebActionBar.pkg
+
+Register_Object oDashboard
+
+// ---------------------------------------------------------------
+// Application object -- holds the database connection.
+// ---------------------------------------------------------------
+Object oApplication is a cApplication
+
+    // Managed Connection. The Connection ID is registered through the
+    // Studio's SQL Connection Manager (Database > Manage Server/Database
+    // Connections), which writes it to DFConnId.ini in the workspace Data
+    // folder. Nothing sensitive is hardcoded here.
+    Object oConnection is a cConnection
+        Use LoginEncryption.pkg
+    End_Object
+
+End_Object
+
+// ---------------------------------------------------------------
+// Web app object -- drill-down mobile-first navigation.
+// ---------------------------------------------------------------
+Object oWebApp is a cWebApp
+    Set psTheme                 to "Df_Flat_Touch"
+    Set peAlignView             to alignCenter
+    Set psApplicationTitle      to "MistralDataflexTest"
+
+    // Login required -- the framework's default.
+    Set peLoginMode             to lmLoginRequired
+
+    // Drill-down style: each navigation pushes a new view onto the stack.
+    Set peApplicationStyle      to wvsDrillDown
+    Set peApplicationStateMode  to asmHistoryAndUrls
+    Set peThemePreference       to tpSystemPreference
+
+    Object oViewStack is a cWebViewStack
+    End_Object
+
+    Object oHeaderPanel is a cWebPanel
+        Set peRegion to prTop
+        Set psCSSClass to "HeaderPanel"
+
+        Object oMenuPanel is a cWebPanel
+            Set peRegion to prLeft
+            Set piWidth to 50
+
+            Object oMenuButton is a cWebMenuButton
+                Set piMenuHeight to 300
+
+                Object oDashboard_itm is a cWebMenuItem
+                    Set psCaption to "Dashboard"
+
+                    WebRegisterPath ntNavigateBegin oDashboard
+
+                    Procedure OnClick
+                        Send NavigatePath
+                    End_Procedure
+                End_Object
+
+                // Add one oXxx_itm cWebMenuItem per view here, following
+                // the pattern above, once you have built it.
+
+            End_Object
+
+            // Drill-down navigation replaces the hamburger with a back
+            // arrow once you are deeper than the default view.
+            Object oBackButton is a cWebButton
+                Set psCSSClass to "WebBack_Icon"
+                Set pbRender to False
+
+                Procedure OnClick
+                    Handle hoTop
+
+                    Get TopViewHandle of (ViewStack(Self)) to hoTop
+                    If (hoTop > 0) Begin
+                        Send NavigateCancel of hoTop
+                    End
+                End_Procedure
+            End_Object
+
+            Send AddClient of (ViewStack(Self)) Self
+
+            Procedure OnUpdateViewStack
+                Handle hoTop hoDflt
+                Integer eMode
+                Boolean bTop
+
+                WebGet peMode of (Host(Self)) to eMode
+
+                Get TopViewHandle of (ViewStack(Self)) to hoTop
+                Get GetDefaultView to hoDflt
+                Move (hoTop=0 or hoTop=hoDflt) to bTop
+
+                WebSet pbRender of oBackButton to (not(bTop) and eMode >= rmMobile)
+                WebSet pbRender of oMenuButton to (bTop or eMode < rmMobile)
+            End_Procedure
+        End_Object
+
+        // The title in the header bar.
+        Object oCaptionPanel is a cWebPanel
+            Set piColumnCount to 12
+
+            Object oCaptionBreadcrumb is a cWebBreadcrumb
+                Set peBreadcrumbStyle to crumbCaption
+                WebSetResponsive peBreadcrumbStyle rmMobile to crumbDropDown
+            End_Object
+        End_Object
+
+        // Right-hand icons.
+        Object oActionPanel is a cWebPanel
+            Set peRegion to prRight
+            Set piColumnCount to 1
+            Set piWidth to 120
+
+            Object oMainActions is a cWebActionBar
+                Set piColumnSpan to 0
+                Set peAlign to alignRight
+            End_Object
+        End_Object
+
+        // The horizontal trail below the title bar.
+        Object oBreadcrumbPanel is a cWebPanel
+            Set peRegion to prBottom
+            WebSetResponsive pbRender rmMobile to False
+
+            Object oHorizontalBreadcrumb is a cWebBreadcrumb
+                // Do not render this breadcrumb if there is only the
+                // Dashboard view in the stack
+                Procedure OnUpdateViewStack
+                    Integer iCount
+                    Get ViewStackSize of (ViewStack(Self)) to iCount
+                    WebSet pbRender to (iCount > 1)
+
+                    Forward Send OnUpdateViewStack
+                End_Procedure
+            End_Object
+        End_Object
+    End_Object
+
+    // Framework plumbing -- omitting either gives Error 4313.
+    Use SessionManager.wo
+    Use WebResourceManager.wo
+
+    Use Login.wo
+
+    // Register each view's .wo file here as you build it.
+    Use Dashboard.wo
+
+    // Tells the drill-down view stack which view to load/restore as the
+    // root view. Without this, MSG_RESTORESTATE_DRILLDOWN has nothing to
+    // navigate to on load and fails with "Invalid message
+    // GET_NAVIGATEINITIALIZE".
+    Set phoDefaultView to oDashboard
+
+    // Hide the header panel for users that are not logged in.
+    Procedure OnChangeRights
+        Boolean bIsLoggedIn
+
+        Forward Send OnChangeRights
+
+        Get IsLoggedIn of (SessionManager(Self)) to bIsLoggedIn
+
+        WebSet pbRender of oHeaderPanel to bIsLoggedIn
+    End_Procedure
+
+End_Object
+
+Send StartWebApp of oWebApp

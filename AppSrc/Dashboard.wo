@@ -1,0 +1,42 @@
+// Dashboard.wo
+// Basic dashboard view for MistralDataflexTest.
+
+Use cWebView.pkg
+Use cWebPanel.pkg
+Use cWebLabel.pkg
+
+Object oDashboard is a cWebView
+    Set psCaption to "Dashboard"
+    Set pbServerOnShow to True
+    Set pbFillHeight to True
+    Set peViewType to vtUndefined
+    Set pbShowCaption to False
+    Set peStateMode to vsmOff
+
+    Object oMainPanel is a cWebPanel
+        Set piColumnCount to 12
+        Set pbFillHeight to True
+
+        Object oWelcomeLabel is a cWebLabel
+            Set psCaption to "Welcome to MistralDataflexTest!"
+            Set psCSSClass to "DashboardWelcome"
+            Set piColumnSpan to 12
+            Set peAlign to alignCenter
+            Set piFontSize to 24
+        End_Object
+
+        Object oDescriptionLabel is a cWebLabel
+            Set psCaption to "This is a basic DataFlex 26.0 Web/Mobile workspace.\n\rAdd your views and data here."
+            Set piColumnSpan to 12
+            Set peAlign to alignCenter
+            Set piFontSize to 14
+            Set piTop to 20
+        End_Object
+    End_Object
+
+    Procedure OnLoad
+        Forward Send OnLoad
+        Send SetBreadcrumbCaption of (Host(Self)) "Dashboard"
+    End_Procedure
+
+End_Object

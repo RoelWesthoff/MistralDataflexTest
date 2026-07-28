@@ -1,0 +1,145 @@
+Use cWebView.pkg
+Use cWebForm.pkg
+Use cWebButton.pkg
+Use cWebPanel.pkg
+Use cWebLabel.pkg
+Use cWebSpacer.pkg
+Use cWebImage.pkg
+
+Object oLogin is a cWebView
+    Set piMinWidth to 250
+    Set piMaxWidth to 420
+    Set pbLoginModeEnforced to False
+    Set piColumnCount to 12
+    Set psCSSClass to "LoginView"
+    Set pbServerOnSubmit to True
+    Set pbServerOnHide to True
+    Set psStateViewName to "Login"
+    Set pbStateReplace to True
+
+    { WebProperty=Server }
+    Property String psPrevStateHash ""
+
+    Delegate Set phoLoginView to Self
+
+    Object oTopSpacer is a cWebSpacer
+        Set pbFillHeight to True
+        Set piColumnSpan to 12
+    End_Object
+
+    Object oWarning is a cWebLabel
+        Set pbVisible to False
+        Set psCaption to "Invalid User ID or password.\n\rHint: 'John' & 'John'."
+        Set peAlign to alignCenter
+        Set piColumnSpan to 12
+        Set psCSSClass to "LoginWarning"
+    End_Object
+
+    Object oLogo is a cWebImage
+        Set piColumnSpan to 10
+        Set psUrl to "Images/DF_Logo_Retina.png"
+        Set pePosition to wiFit
+        Set piColumnIndex to 1
+        Set piHeight to 160
+
+        WebSetResponsive piHeight rmMobile to 100
+    End_Object
+
+    Object oLoginName is a cWebForm
+        Set psLabel to "User ID"
+        Set peLabelPosition to lpFloat
+        Set piMaxLength to 20
+        Set piColumnIndex to 1
+        Set psPlaceHolder to "loginname"
+        Set piColumnSpan to 10
+        Set psAutoComplete to "username"
+    End_Object
+
+    Object oPassword is a cWebForm
+        Set psLabel to "Password"
+        Set pbPassword to True
+        Set piMaxLength to 20
+        Set peLabelPosition to lpFloat
+        Set psPlaceHolder to "password"
+        Set piColumnSpan to 10
+        Set piColumnIndex to 1
+        Set psAutoComplete to "current-password"
+    End_Object
+
+    Object oWebSpacer1 is a cWebSpacer
+        Set piColumnSpan to 12
+        Set piHeight to 10
+    End_Object
+
+    Object oLoginButton is a cWebButton
+        Set pbShowLabel to False
+        Set psCaption to "sign in"
+        Set pbServerOnClick to True
+        Set piColumnSpan to 10
+        Set piColumnIndex to 1
+
+        Procedure OnClick
+            Send DoLogin
+        End_Procedure
+    End_Object
+
+    Object oBottomSpacer is a cWebSpacer
+        Set pbFillHeight to True
+        Set piColumnSpan to 12
+    End_Object
+
+    Procedure DoLogin
+        String sLoginName sPassword sPrevStateHash
+        Boolean bResult
+
+        WebGet psValue of oLoginName to sLoginName
+        WebGet psValue of oPassword to sPassword
+
+        Get UserLogin of (SessionManager(Self)) sLoginName sPassword to bResult
+
+        If (bResult) Begin
+            Send Hide of oLogin
+            WebSet psCSSClass of (Host(Self)) to ""
+
+            WebGet psPrevStateHash to sPrevStateHash
+            Send NavigateToStateHash of (Host(Self)) sPrevStateHash True
+
+            // Clear the login values.
+            WebSet psValue of oLoginName to ""
+            WebSet psValue of oPassword  to ""
+            WebSet pbVisible of oWarning to False
+        End
+        Else Begin
+            WebSet pbVisible of oWarning to True
+        End
+    End_Procedure
+
+    Procedure OnSubmit
+        Send DoLogin
+    End_Procedure
+
+    Procedure OnLoad
+        String sPrevStateHash sView
+
+        Forward Send OnLoad
+
+        // Store the current state so we can go back to that later.
+        Get StateHash of (Host(Self)) to sPrevStateHash
+        Send ParseViewStateHash sPrevStateHash (&sView)
+        If (Lowercase(sView) <> Lowercase(psStateViewName(Self))) Begin
+            WebSet psPrevStateHash to sPrevStateHash
+        End
+
+    End_Procedure
+
+    Procedure OnBeforeShow
+        // Apply a nice background style
+        WebSet psCSSClass of (Host(Self)) to "LoginBackground"
+    End_Procedure
+
+    Procedure OnHide
+        WebSet psCSSClass of (Host(Self)) to ""
+        Send UnloadView Self
+    End_Procedure
+
+End_Object

@@ -1,0 +1,98 @@
+﻿Use DataDict.pkg
+
+Open WebAppSession
+Open WebAppUser
+
+{ ClassLibrary=WebApp }
+{ HelpTopic=cWebAppSessionDataDictionary }
+Class cWebAppSessionDataDictionary is a DataDictionary
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        Set Main_File to WebAppSession.File_Number
+
+        Set Add_Server_File to WebAppUser.File_Number
+
+        Set ParentNullAllowed WebAppUser.File_Number to True
+
+        Set Foreign_Field_Option DD_KEYFIELD DD_NOPUT to True
+        Set Foreign_Field_Option DD_KEYFIELD DD_FINDREQ to True
+        Set Foreign_Field_Option DD_INDEXFIELD DD_NOPUT to True
+        Set Foreign_Field_Option DD_DEFAULT DD_DISPLAYONLY to True
+
+        Set Field_Checkbox_Values Field WebAppSession.Active to "Y" "N"
+        Set Field_Error Field WebAppSession.Active to 500 "Invalid WebAppSession Active State"
+    End_Procedure
+
+    Procedure Creating
+        DateTime dtCurrentDateTime
+        
+        Forward Send Creating
+        
+        //  Init usecounter
+        Move 0 to WebAppSession.UseCount
+        
+        //  Set the creation and access time to the current time
+        Move (CurrentDateTime()) to dtCurrentDateTime
+    
+        Get TimeToString dtCurrentDateTime to WebAppSession.CreateTime
+        Get TimeToString dtCurrentDateTime to WebAppSession.LastAccessTime
+        
+        Move dtCurrentDateTime to WebAppSession.CreateDate
+        Move dtCurrentDateTime to WebAppSession.LastAccessDate
+    End_Procedure
+    
+    //
+    //  Converts the given time to an string that can be saved in the database.
+    //
+    //  Params:
+    //      dtTime  Time to convert
+    //  Returns:
+    //      String with "HH:MM:SS" format
+    //
+    { Visibility=Private }
+    Function TimeToString DateTime dtTime Returns String
+        String sHours sMinutes sSeconds
+        
+        //  Extract parts
+        Move (String(DateGetHour(dtTime))) to sHours
+        Move (String(DateGetMinute(dtTime))) to sMinutes
+        Move (String(DateGetSecond(dtTime))) to sSeconds
+        
+        //  Fill out with 0
+        If (Length(sHours) = 1) ;
+            Move ("0" + sHours) to sHours
+        If (Length(sMinutes) = 1) ;
+            Move ("0" + sMinutes) to sMinutes
+        If (Length(sSeconds) = 1) ;
+            Move ("0" + sSeconds) to sSeconds
+        
+        Function_Return (sHours + ":" + sMinutes + ":" + sSeconds)
+    End_Function
+    
+    //
+    //  Sets the time of the datetime variable to the time in the string.
+    //
+    //  Params:
+    //      dtTime  Datetime variable to add time to
+    //      sTimeString String with time in the format "HH:MM:SS"
+    //  Returns:
+    //      dtDateTime with the loaded time
+    //
+    { Visibility=Private }
+    Function StringToTime DateTime dtTime String sTimeString Returns DateTime
+        String sHours sMinutes sSeconds
+        
+        //  Extract parts
+        Move (Mid(sTimeString, 2, 1)) to sHours
+        Move (Mid(sTimeString, 2, 4)) to sMinutes
+        Move (Mid(sTimeString, 2, 7)) to sSeconds
+        
+        //  Set to DateTime
+        Move (DateSetHour(dtTime, (Integer(sHours)))) to dtTime
+        Move (DateSetMinute(dtTime, (Integer(sMinutes)))) to dtTime
+        Move (DateSetSecond(dtTime, (Integer(sSeconds)))) to dtTime
+        
+        Function_Return dtTime
+    End_Function
+End_Class

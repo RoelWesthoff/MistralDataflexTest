@@ -1,0 +1,79 @@
+/* MistralDataflexTest - Application CSS */
+
+/* Login View */
+.LoginView {
+    background-color: #f5f5f5;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.LoginBackground {
+    background: linear-gradient(135deg, #348EE6, #749C75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.LoginWarning {
+    color: #ff5a5f;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+/* Header Panel */
+.HeaderPanel {
+    background-color: #348EE6;
+    color: white;
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.HeaderPanel .WebLabel {
+    color: white;
+    font-weight: bold;
+}
+
+/* Dashboard */
+.DashboardWelcome {
+    color: #348EE6;
+    margin-top: 20px;
+    font-weight: bold;
+}
+
+/* General */
+.WebButton {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.WebButton:hover {
+    opacity: 0.9;
+}
+
+.WebForm input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.WebForm input:focus {
+    outline: none;
+    border-color: #348EE6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .HeaderPanel {
+        padding: 8px;
+    }
+    .DashboardWelcome {
+        font-size: 18px !important;
+    }
+}
